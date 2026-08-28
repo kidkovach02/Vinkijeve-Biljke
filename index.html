@@ -41,7 +41,7 @@
             </div>
         </header>
 
-        <!-- Monthly Stats, Navigation & Export -->
+        <!-- Monthly Stats, Navigation & Export/Import -->
         <div class="bg-[#52473d] text-[#f7f2eb] p-6 rounded-3xl shadow-sm space-y-4">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div class="flex items-center gap-3">
@@ -64,9 +64,15 @@
                     </div>
                     <button onclick="changeMonth(1)" class="bg-[#665a4e] hover:bg-[#7a6d60] text-white w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer text-sm" title="Naredni mesec">›</button>
                 </div>
-                <button onclick="exportData()" class="bg-[#665a4e] hover:bg-[#7a6d60] text-[#f7f2eb] text-xs font-medium px-5 py-3 rounded-2xl transition border border-[#7a6d60] cursor-pointer shadow-2xs shrink-0">
-                    📥 Izvezi podatke (Backup JSON)
-                </button>
+                <div class="flex flex-wrap gap-2 shrink-0">
+                    <button onclick="exportData()" class="bg-[#665a4e] hover:bg-[#7a6d60] text-[#f7f2eb] text-xs font-medium px-4 py-3 rounded-2xl transition border border-[#7a6d60] cursor-pointer shadow-2xs">
+                        📥 Izvezi (Backup)
+                    </button>
+                    <label class="bg-[#b89582] hover:bg-[#a6826f] text-white text-xs font-medium px-4 py-3 rounded-2xl transition cursor-pointer shadow-2xs flex items-center">
+                        📤 Uvezi podatke
+                        <input type="file" id="importFile" accept=".json" class="hidden" onchange="importData(event)">
+                    </label>
+                </div>
             </div>
             <!-- Brzi izbor meseci -->
             <div id="monthSelectorButtons" class="flex flex-wrap gap-1.5 pt-2 border-t border-[#665a4e]/60 text-xs">
@@ -398,7 +404,6 @@
             if (plant) {
                 const updatedIncomes = [...plant.incomes, { id: Date.now().toString(), amount, date, note }];
                 try {
-                    // Update u firestore-u preko doc reference
                     const { updateDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
                     await updateDoc(doc(db, "plants", plantId), { incomes: updatedIncomes });
                     incomeForm.reset();
@@ -452,6 +457,56 @@
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
+        }
+
+        window.importData = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const content = JSON.parse(e.target.result);
+                    if (!confirm(`Da li ste sigurni da želite da uvezete podatke iz fajla? Biće dodato ${content.plants ? content.plants.length : 0} biljaka i ${content.expenses ? content.expenses.length : 0} troškova u bazu.`)) {
+                        event.target.value = '';
+                        return;
+                    }
+
+                    // Ubacivanje biljaka
+                    if (content.plants && Array.isArray(content.plants)) {
+                        for (const p of content.plants) {
+                            const { id, ...plantData } = p; // Uklanjamo stari ID da napravimo novi u bazi
+                            await addDoc(collection(db, "plants"), {
+                                name: plantData.name || 'Nepoznato',
+                                type: plantData.type || 'lukovica',
+                                category: plantData.category || 'standard',
+                                cost: plantData.cost || 0,
+                                date: plantData.date || todayStr,
+                                incomes: plantData.incomes || []
+                            });
+                        }
+                    }
+
+                    // Ubacivanje troškova
+                    if (content.expenses && Array.isArray(content.expenses)) {
+                        for (const exp of content.expenses) {
+                            const { id, ...expData } = exp;
+                            await addDoc(collection(db, "expenses"), {
+                                name: expData.name || 'Trošak',
+                                amount: expData.amount || 0,
+                                date: expData.date || todayStr
+                            });
+                        }
+                    }
+
+                    alert('Uspešno uvezeni podaci u Firebase bazu!');
+                } catch (err) {
+                    console.error("Greška pri uvozu fajla:", err);
+                    alert('Došlo je do greške prilikom čitanja JSON fajla.');
+                }
+                event.target.value = ''; // Resetuje input fajla
+            };
+            reader.readAsText(file);
         }
 
         searchInput.addEventListener('input', render);
@@ -601,7 +656,7 @@
                         </div>
                     </td>
                     <td class="py-3 px-2">
-                        <div class="text-xs text-[#6e6355]">
+                        <div class="text-xs text-[]">
                             <span class="font-medium">${costVal.toFixed(2)} €</span>
                             <div class="text-[10px] text-[#a89f91]">${plant.date || ''}</div>
                         </div>
