@@ -22,7 +22,7 @@
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-xs border border-[#f0eae1]">
           <div>
               <h1 class="text-2xl font-bold text-[#383027] tracking-tight">🌿 Jungle Dashboard</h1>
-              <p class="text-xs text-[#8c8275] mt-0.5">Praćenje nabavki, opštih troškova i zarade</p>
+              <p class="text-xs text-[#8c8275] mt-0.5">Praćenje nabavki, opštih troškova i zarade (Firebase sinhronizacija)</p>
           </div>
             <!-- Global Stats -->
             <div class="flex flex-wrap gap-3 w-full md:w-auto">
@@ -65,7 +65,7 @@
                     <button onclick="changeMonth(1)" class="bg-[#665a4e] hover:bg-[#7a6d60] text-white w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer text-sm" title="Naredni mesec">›</button>
                 </div>
                 <button onclick="exportData()" class="bg-[#665a4e] hover:bg-[#7a6d60] text-[#f7f2eb] text-xs font-medium px-5 py-3 rounded-2xl transition border border-[#7a6d60] cursor-pointer shadow-2xs shrink-0">
-                    📥 Izvezi podatke (CSV/Excel)
+                    📥 Izvezi podatke (Backup JSON)
                 </button>
             </div>
             <!-- Brzi izbor meseci -->
@@ -107,7 +107,7 @@
 
                         <div>
                             <label class="block text-xs font-medium text-[#7a6f61] mb-1">Nabavna cena (€)</label>
-                            <input type="number" step="0.01" id="plantCost" class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#e8dfd3] bg-[#fcf9f5] focus:outline-none focus:ring-2 focus:ring-[#b89582] text-[#4a4238]" placeholder="0 (ako je izrasla kod tebe) ili cena nabavke">
+                            <input type="number" step="0.01" id="plantCost" class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#e8dfd3] bg-[#fcf9f5] focus:outline-none focus:ring-2 focus:ring-[#b89582] text-[#4a4238]" placeholder="0 ili cena nabavke">
                         </div>
 
                         <div>
@@ -243,9 +243,26 @@
 
     </div>
 
-    <script>
-        let plants = JSON.parse(localStorage.getItem('plant_business_plants')) || [];
-        let expenses = JSON.parse(localStorage.getItem('plant_business_expenses')) || [];
+    <!-- Firebase SDK skripte (Modularna verzija) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_byVN7w4r4iyKCo-WdIlCF34s4k3KxmM",
+            authDomain: "vinkijeve-biljke.firebaseapp.com",
+            projectId: "vinkijeve-biljke",
+            storageBucket: "vinkijeve-biljke.firebasestorage.app",
+            messagingSenderId: "762159348390",
+            appId: "1:762159348390:web:65c49a7bbefa3c93755267",
+            measurementId: "G-CLWQLTE0DL"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let plants = [];
+        let expenses = [];
 
         const todayStr = new Date().toISOString().split('T')[0];
         document.getElementById('plantDate').value = todayStr;
@@ -333,7 +350,7 @@
             render();
         }
 
-        plantForm.addEventListener('submit', (e) => {
+        plantForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = document.getElementById('plantName').value;
             const type = document.getElementById('plantType').value;
@@ -341,42 +358,37 @@
             let cost = parseFloat(plantCostInput.value) || 0;
             const date = document.getElementById('plantDate').value;
 
-            plants.push({
-                id: Date.now(),
-                name,
-                type,
-                category,
-                cost,
-                date,
-                incomes: []
-            });
-
-            saveAndRender();
-            plantForm.reset();
-            document.getElementById('plantDate').value = todayStr;
+            try {
+                await addDoc(collection(db, "plants"), {
+                    name, type, category, cost, date, incomes: []
+                });
+                plantForm.reset();
+                document.getElementById('plantDate').value = todayStr;
+            } catch (err) {
+                console.error("Greška pri dodavanju biljke:", err);
+            }
         });
 
-        expenseForm.addEventListener('submit', (e) => {
+        expenseForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = document.getElementById('expenseName').value;
             const amount = parseFloat(document.getElementById('expenseAmount').value) || 0;
             const date = document.getElementById('expenseDate').value;
 
-            expenses.push({
-                id: Date.now(),
-                name,
-                amount,
-                date
-            });
-
-            saveAndRender();
-            expenseForm.reset();
-            document.getElementById('expenseDate').value = todayStr;
+            try {
+                await addDoc(collection(db, "expenses"), {
+                    name, amount, date
+                });
+                expenseForm.reset();
+                document.getElementById('expenseDate').value = todayStr;
+            } catch (err) {
+                console.error("Greška pri dodavanju troška:", err);
+            }
         });
 
-        incomeForm.addEventListener('submit', (e) => {
+        incomeForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const plantId = parseInt(selectPlant.value);
+            const plantId = selectPlant.value;
             const incomeType = document.getElementById('incomeType').value;
             const amount = parseFloat(document.getElementById('incomeAmount').value) || 0;
             const date = document.getElementById('incomeDate').value;
@@ -384,34 +396,51 @@
 
             const plant = plants.find(p => p.id === plantId);
             if (plant) {
-                plant.incomes.push({ id: Date.now(), amount, date, note });
-                saveAndRender();
-                incomeForm.reset();
-                document.getElementById('incomeDate').value = todayStr;
+                const updatedIncomes = [...plant.incomes, { id: Date.now().toString(), amount, date, note }];
+                try {
+                    // Update u firestore-u preko doc reference
+                    const { updateDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+                    await updateDoc(doc(db, "plants", plantId), { incomes: updatedIncomes });
+                    incomeForm.reset();
+                    document.getElementById('incomeDate').value = todayStr;
+                } catch (err) {
+                    console.error("Greška pri upisu prodaje:", err);
+                }
             }
         });
 
-        window.deletePlant = function(id) {
+        window.deletePlant = async function(id) {
             if (confirm('Da li ste sigurni da želite da obrišete ovu biljku i sve njene prihode?')) {
-                plants = plants.filter(p => p.id !== id);
-                saveAndRender();
-            }
-        }
-
-        window.deleteIncome = function(plantId, incomeId) {
-            if (confirm('Da li ste sigurni da želite da obrišete ovu stavku prodaje?')) {
-                const plant = plants.find(p => p.id === plantId);
-                if (plant) {
-                    plant.incomes = plant.incomes.filter(inc => inc.id !== incomeId);
-                    saveAndRender();
+                try {
+                    await deleteDoc(doc(db, "plants", id));
+                } catch (err) {
+                    console.error("Greška pri brisanju:", err);
                 }
             }
         }
 
-        window.deleteExpense = function(id) {
+        window.deleteIncome = async function(plantId, incomeId) {
+            if (confirm('Da li ste sigurni da želite da obrišete ovu stavku prodaje?')) {
+                const plant = plants.find(p => p.id === plantId);
+                if (plant) {
+                    const updatedIncomes = plant.incomes.filter(inc => inc.id !== incomeId);
+                    try {
+                        const { updateDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+                        await updateDoc(doc(db, "plants", plantId), { incomes: updatedIncomes });
+                    } catch (err) {
+                        console.error("Greška pri brisanju prihoda:", err);
+                    }
+                }
+            }
+        }
+
+        window.deleteExpense = async function(id) {
             if (confirm('Da li ste sigurni da želite da obrišete ovaj trošak?')) {
-                expenses = expenses.filter(e => e.id !== id);
-                saveAndRender();
+                try {
+                    await deleteDoc(doc(db, "expenses", id));
+                } catch (err) {
+                    console.error("Greška pri brisanju troška:", err);
+                }
             }
         }
 
@@ -419,7 +448,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ plants, expenses }, null, 2));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `jungle_dashboard_backup_${currentY}-${currentM + 1}.json`);
+            downloadAnchor.setAttribute("download", `vinkijeve_biljke_backup_${currentY}-${currentM + 1}.json`);
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
@@ -428,11 +457,16 @@
         searchInput.addEventListener('input', render);
         typeFilter.addEventListener('change', render);
 
-        function saveAndRender() {
-            localStorage.setItem('plant_business_plants', JSON.stringify(plants));
-            localStorage.setItem('plant_business_expenses', JSON.stringify(expenses));
+        // Real-time slušanje baze (Firestore onSnapshot)
+        onSnapshot(collection(db, "plants"), (snapshot) => {
+            plants = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             render();
-        }
+        });
+
+        onSnapshot(collection(db, "expenses"), (snapshot) => {
+            expenses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            render();
+        });
 
         function render() {
             currentMonthNameEl.textContent = monthsNames[currentM];
@@ -481,7 +515,7 @@
                         <td class="py-3 px-2 text-[#8c8275] text-xs">${exp.date || '/'}</td>
                         <td class="py-3 px-2 font-medium text-[#8c6d53]">${exp.amount.toFixed(2)} €</td>
                         <td class="py-3 px-2 text-right">
-                            <button onclick="deleteExpense(${exp.id})" class="text-xs text-[#a89f91] hover:text-rose-700 transition cursor-pointer px-2 py-1 rounded hover:bg-[#f2e6e1]" title="Obriši trošak">Obriši</button>
+                            <button onclick="deleteExpense('${exp.id}')" class="text-xs text-[#a89f91] hover:text-rose-700 transition cursor-pointer px-2 py-1 rounded hover:bg-[#f2e6e1]" title="Obriši trošak">Obriši</button>
                         </td>
                     `;
                     expensesTableBody.appendChild(row);
@@ -507,7 +541,8 @@
                 option.textContent = plant.name;
                 selectPlant.appendChild(option);
 
-                totalInv += plant.cost;
+                totalInv += plant.cost || 0;
+                const plantIncomes = plant.incomes || [];
 
                 if (plant.date) {
                     const parts = plant.date.split('-');
@@ -515,15 +550,15 @@
                         const y = parseInt(parts[0], 10);
                         const m = parseInt(parts[1], 10) - 1;
                         if (y === currentY && m === currentM) {
-                            monthPlantCostTotal += plant.cost;
+                            monthPlantCostTotal += plant.cost || 0;
                         }
                     }
                 }
 
-                const totalIncome = plant.incomes.reduce((sum, inc) => sum + inc.amount, 0);
+                const totalIncome = plantIncomes.reduce((sum, inc) => sum + inc.amount, 0);
                 totalIncAll += totalIncome;
 
-                plant.incomes.forEach(inc => {
+                plantIncomes.forEach(inc => {
                     if (inc.date) {
                         const parts = inc.date.split('-');
                         if (parts.length === 3) {
@@ -538,8 +573,10 @@
             });
 
             filteredPlants.forEach(plant => {
-                const totalIncome = plant.incomes.reduce((sum, inc) => sum + inc.amount, 0);
-                const profit = totalIncome - plant.cost;
+                const plantIncomes = plant.incomes || [];
+                const totalIncome = plantIncomes.reduce((sum, inc) => sum + inc.amount, 0);
+                const costVal = plant.cost || 0;
+                const profit = totalIncome - costVal;
 
                 let typeLabel = plant.type === 'odrasla' ? 'Odrasla biljka' : 'Lukovica / Reznica';
 
@@ -547,8 +584,8 @@
                     ? `<span class="bg-[#f2e6e1] text-[#915a4b] border border-[#e3d1c9] px-2 py-0.5 text-[10px] rounded-md font-medium">Retka ✨</span>`
                     : `<span class="bg-[#f0eae1] text-[#7a6f61] px-2 py-0.5 text-[10px] rounded-md">Standard</span>`;
 
-                let incomesHtml = plant.incomes.length > 0 
-                    ? plant.incomes.map(inc => `<div class="flex items-center justify-between gap-2 text-xs text-[#8c8275] py-0.5"><span>+${inc.amount.toFixed(2)} € (${inc.date || ''}) - ${inc.note}</span><button onclick="deleteIncome(${plant.id}, ${inc.id})" class="text-[#b5aca1] hover:text-rose-700 font-bold px-1 transition cursor-pointer" title="Obriši ovu prodaju">×</button></div>`).join('')
+                let incomesHtml = plantIncomes.length > 0 
+                    ? plantIncomes.map(inc => `<div class="flex items-center justify-between gap-2 text-xs text-[#8c8275] py-0.5"><span>+${inc.amount.toFixed(2)} € (${inc.date || ''}) - ${inc.note}</span><button onclick="deleteIncome('${plant.id}', '${inc.id}')" class="text-[#b5aca1] hover:text-rose-700 font-bold px-1 transition cursor-pointer" title="Obriši ovu prodaju">×</button></div>`).join('')
                     : `<span class="text-[#a89f91] italic text-xs">Nema zabeleženih prihoda</span>`;
 
                 const row = document.createElement('tr');
@@ -565,7 +602,7 @@
                     </td>
                     <td class="py-3 px-2">
                         <div class="text-xs text-[#6e6355]">
-                            <span class="font-medium">${plant.cost.toFixed(2)} €</span>
+                            <span class="font-medium">${costVal.toFixed(2)} €</span>
                             <div class="text-[10px] text-[#a89f91]">${plant.date || ''}</div>
                         </div>
                     </td>
@@ -578,7 +615,7 @@
                         ${profit.toFixed(2)} €
                     </td>
                     <td class="py-3 px-2 text-right">
-                        <button onclick="deletePlant(${plant.id})" class="text-xs text-[#a89f91] hover:text-rose-700 transition cursor-pointer px-2 py-1 rounded hover:bg-[#f2e6e1]" title="Obriši biljku">Obriši</button>
+                        <button onclick="deletePlant('${plant.id}')" class="text-xs text-[#a89f91] hover:text-rose-700 transition cursor-pointer px-2 py-1 rounded hover:bg-[#f2e6e1]" title="Obriši biljku">Obriši</button>
                     </td>
                 `;
                 plantsTableBody.appendChild(row);
@@ -601,8 +638,6 @@
             monthExpOnlyEl.textContent = monthExpTotal.toFixed(2) + ' €';
             monthPlantOnlyEl.textContent = monthPlantCostTotal.toFixed(2) + ' €';
         }
-
-        render();
     </script>
 </body>
 </html>
