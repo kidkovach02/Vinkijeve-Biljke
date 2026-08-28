@@ -3,375 +3,510 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Evidencija Biljaka i Troškova</title>
+    <title>Jungle Dashboard - Evidencija i poslovanje</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #2e7d32;
-            --primary-light: #4caf50;
-            --background: #f4f6f5;
-            --card-bg: #ffffff;
-            --text: #333333;
-            --border: #ddd;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--background);
-            color: var(--text);
-            margin: 0;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 600px;
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            box-sizing: border-box;
-            margin-bottom: 20px;
-        }
-
-        h1, h2 {
-            color: var(--primary);
-            text-align: center;
-            font-size: 1.4rem;
-            margin-top: 0;
-        }
-
-        .form-group {
-            margin-bottom: 12px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        input, select, button {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 1rem;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary-light);
-            box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
-        }
-
-        button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-            margin-top: 5px;
-        }
-
-        button:hover {
-            background-color: var(--primary-light);
-        }
-
-        .filter-section {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .filter-section select {
-            flex: 1;
-        }
-
-        .stats {
-            background: #e8f5e9;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-size: 0.95rem;
-            text-align: center;
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 0.9rem;
-        }
-
-        th, td {
-            padding: 10px 8px;
-            border-bottom: 1px solid var(--border);
-            text-align: left;
-        }
-
-        th {
-            background-color: #f9f9f9;
-            color: #555;
-        }
-
-        .delete-btn {
-            background-color: #d32f2f;
-            padding: 5px 8px;
-            font-size: 0.8rem;
-            width: auto;
-            border-radius: 4px;
-        }
-
-        .delete-btn:hover {
-            background-color: #f44336;
-        }
-
-        .backup-section {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .backup-section button {
-            background-color: #555;
-        }
-
-        .backup-section button:hover {
-            background-color: #777;
-        }
-
-        input[type="file"] {
-            display: none;
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #fcf9f5;
+            color: #4a4238;
         }
     </style>
 </head>
-<body>
+<body class="p-4 md:p-8">
 
-    <div class="container">
-        <h1>Evidencija Biljaka i Troškova</h1>
+    <div class="max-w-6xl mx-auto space-y-8">
         
-        <form id="entryForm">
-            <div class="form-group">
-                <label for="date">Datum:</label>
-                <input type="date" id="date" required>
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-xs border border-[#f0eae1]">
+          <div>
+              <h1 class="text-2xl font-bold text-[#383027] tracking-tight">🌿 Jungle Dashboard</h1>
+              <p class="text-xs text-[#8c8275] mt-0.5">Praćenje nabavki, opštih troškova i zarade</p>
+          </div>
+            <!-- Global Stats -->
+            <div class="flex flex-wrap gap-3 w-full md:w-auto">
+                <div class="bg-[#f7f2eb] px-4 py-3 rounded-2xl border border-[#ede5d8] flex-1 md:flex-initial">
+                    <p class="text-[11px] text-[#7a6f61] font-medium uppercase tracking-wider">Neto Profit</p>
+                    <p id="totalProfit" class="text-xl font-bold text-[#4a4238]">0.00 €</p>
+                </div>
+                <div class="bg-[#f7f2eb] px-4 py-3 rounded-2xl border border-[#ede5d8] flex-1 md:flex-initial">
+                    <p class="text-[11px] text-[#7a6f61] font-medium uppercase tracking-wider">Opšti troškovi</p>
+                    <p id="totalExpenses" class="text-xl font-bold text-[#8c6d53]">0.00 €</p>
+                </div>
+                <div class="bg-[#f7f2eb] px-4 py-3 rounded-2xl border border-[#ede5d8] flex-1 md:flex-initial">
+                    <p class="text-[11px] text-[#7a6f61] font-medium uppercase tracking-wider">Uloženo</p>
+                    <p id="totalInvested" class="text-xl font-bold text-[#6e6355]">0.00 €</p>
+                </div>
             </div>
+        </header>
+
+        <!-- Monthly Stats & Export -->
+        <div class="bg-[#52473d] text-[#f7f2eb] p-6 rounded-3xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h3 class="font-semibold text-base">📅 Statistika za tekući mesec (<span id="currentMonthName"></span>)</h3>
+                <p class="text-xs text-[#d4ccc2] mt-1">
+                    Prihod ovog meseca: <span id="monthIncome" class="font-bold text-white">0.00 €</span> | 
+                    Ukupni troškovi meseca: <span id="monthCost" class="font-bold text-white">0.00 €</span> 
+                    <span class="text-[10px] text-[#b8ab9d] block sm:inline mt-0.5 sm:mt-0">(Opšti: <span id="monthExpOnly">0.00 €</span> + Nabavke: <span id="monthPlantOnly">0.00 €</span>)</span>
+                </p>
+            </div>
+            <button onclick="exportData()" class="bg-[#665a4e] hover:bg-[#7a6d60] text-[#f7f2eb] text-xs font-medium px-5 py-3 rounded-2xl transition border border-[#7a6d60] cursor-pointer shadow-2xs shrink-0">
+                📥 Izvezi podatke (CSV/Excel)
+            </button>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             
-            <div class="form-group">
-                <label for="type">Tip unosa:</label>
-                <select id="type">
-                    <option value="biljka">Biljka / Aktivnost</option>
-                    <option value="trosak">Trošak</option>
-                </select>
+            <!-- Left Column: Forms -->
+            <div class="space-y-6 md:col-span-1">
+                
+                <!-- Add Plant Form -->
+                <div class="bg-white p-6 rounded-3xl shadow-xs border border-[#f0eae1] space-y-4">
+                    <h2 class="font-semibold text-sm uppercase tracking-wider text-[#7a6f61] border-b border-[#f7f2eb] pb-3">1. Nova biljka / Nabavka</h2>
+                    <form id="plantForm" class="space-y-3.5">
+                        <div>
+                            <label class="block text-xs font-medium text-[#7a6f61] mb-1">Naziv biljke / lukovice</label>
+                            <input type="text" id="plantName" required class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#e8dfd3] bg-[#fcf9f5] focus:outline-none focus:ring-2 focus:ring-[#b89582] text-[#4a4238]" placeholder="npr. Alocasia Mint">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-medium text-[#7a6f61] mb-1">Tip biljke</label>
+                                <select id="plantType" class="w-full px-3 py-2.5 text-sm rounded-xl border border-[#e8dfd3] bg-[#fcf9f5] focus:outline-none focus:ring-2 focus:ring-[#b89582] text-[#4a4238]">
+                                    <option value="lukovica">Lukovica / Reznica</option>
+                                    <option value="odrasla">Odrasla biljka</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-[#7a6f61] mb-1">Kategorija</label>
+                                <select id="plantCategory" class="w-full px-3 py-2.5 text-sm rounded-xl border border-[#e8dfd3] bg-[#fcf9f5] focus:outline-none focus:ring-2 focus:ring-[#b89582] text-[#4a4238]">
+                                    <option value="standard">Standardna</option>
+                                    <option value="retka">Retka ✨</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-[#7a6f61] mb-1">Nabavna cena (€)</label>
+                            <input type="number" step="0.01" id="plantCost" class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#e8dfd3] bg-[#fcf9f5] focus:outline-none focus:ring-2 focus:ring-[#b89582] text-[#4a4238]" placeholder="0 (ako je izrasla kod tebe) ili cena nabavke">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-[#7a6f61] mb-1">Datum dodavanja</label>
+                            <input type="date" id="plantDate" required class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#e8dfd3] bg-[#fcf9f5] focus:outline-none focus:ring-2 focus:ring-[#b89582] text-[#4a4238]">
+                        </div>
+                        <button type="submit" class="w-full bg-[#b89582] hover:bg-[#a6826f] text-white font-medium py-3 rounded-2xl transition text-sm shadow-xs cursor-pointer">Dodaj biljku</button>
+                    </form>
+                </div>
+
+                <!-- Add General Expense Form -->
+                <div class="bg-white p-6 rounded-3xl shadow-xs border border-[#f0eae1] space-y-4">
+                    <h2 class="font-semibold text-sm uppercase tracking-wider text-[#7a6f61] border-b border-[#f7f2eb] pb-3">2. Opšti trošak (zemlja, saksije...)</h2>
+                    <form id="expenseForm" class="space-y-3.5">
+                        <div>
+                            <label class="block text-xs font-medium text-[#7a6f61] mb-1">Naziv troška / Materijala</label>
+                            <input type="text" id="expenseName" required class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#e8dfd3] bg-[#fcf9f5] focus:outline-none focus:ring-2 focus:ring-[#b89582] text-[#4a4238]" placeholder="npr. Pakovanje zemlje 50L">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-[#7a6f61] mb-1">Iznos (€)</label>
+                            <input type="number" step="0.01" id="expenseAmount" required class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#e8dfd3] bg-[#fcf9f5] focus:outline-none focus:ring-2 focus:ring-[#b89582] text-[#4a4238]" placeholder="15">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-[#7a6f61] mb-1">Datum</label>
+                            <input type="date" id="expenseDate" required class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#e8dfd3] bg-[#fcf9f5] focus:outline-none focus:ring-2 focus:ring-[#b89582] text-[#4a4238]">
+                        </div>
+                        <button type="submit" class="w-full bg-[#8c6d53] hover:bg-[#785c45] text-white font-medium py-3 rounded-2xl transition text-sm shadow-xs cursor-pointer">Zabeleži trošak</button>
+                    </form>
+                </div>
+
+                <!-- Add Income Form -->
+                <div class="bg-white p-6 rounded-3xl shadow-xs border border-[#f0eae1] space-y-4">
+                    <h2 class="font-semibold text-sm uppercase tracking-wider text-[#7a6f61] border-b border-[#f7f2eb] pb-3">3. Zabeleži prodaju</h2>
+                    <form id="incomeForm" class="space-y-3.5">
+                        <div>
+                            <label class="block text-xs font-medium text-[#7a6f61] mb-1">Izaberi biljku</label>
+                            <select id="selectPlant" required class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#e8dfd3] bg-[#fcf9f5] focus:outline-none focus:ring-2 focus:ring-[#b89582] text-[#4a4238]">
+                                <option value="">-- Izaberi iz liste --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-[#7a6f61] mb-1">Vrsta prodaje</label>
+                            <select id="incomeType" class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#e8dfd3] bg-[#fcf9f5] focus:outline-none focus:ring-2 focus:ring-[#b89582] text-[#4a4238]">
+                                <option value="partial">Prodaja lukovice / reznice</option>
+                                <option value="full">Prodaja odrasle biljke</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-[#7a6f61] mb-1">Prodajna cena (€)</label>
+                            <input type="number" step="0.01" id="incomeAmount" required class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#e8dfd3] bg-[#fcf9f5] focus:outline-none focus:ring-2 focus:ring-[#b89582] text-[#4a4238]" placeholder="15">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-[#7a6f61] mb-1">Datum prodaje</label>
+                            <input type="date" id="incomeDate" required class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#e8dfd3] bg-[#fcf9f5] focus:outline-none focus:ring-2 focus:ring-[#b89582] text-[#4a4238]">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-[#7a6f61] mb-1">Napomena</label>
+                            <input type="text" id="incomeNote" class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#e8dfd3] bg-[#fcf9f5] focus:outline-none focus:ring-2 focus:ring-[#b89582] text-[#4a4238]" placeholder="npr. Prodaja prve reznice">
+                        </div>
+                        <button type="submit" class="w-full bg-[#4a4238] hover:bg-[#383027] text-white font-medium py-3 rounded-2xl transition text-sm shadow-xs cursor-pointer">Evidentiraj prodaju</button>
+                    </form>
+                </div>
+
             </div>
 
-            <div class="form-group">
-                <label for="name">Naziv:</label>
-                <input type="text" id="name" placeholder="npr. Monstera, Đubrivo..." required>
+            <!-- Right Column: Tables & Filters -->
+            <div class="md:col-span-2 space-y-6">
+                
+                <!-- Plants Table Section -->
+                <div class="bg-white p-6 rounded-3xl shadow-xs border border-[#f0eae1] space-y-4">
+                    <div class="flex flex-col gap-3 border-b border-[#f7f2eb] pb-4">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                            <h2 class="font-semibold text-lg text-[#383027]">Evidencija biljaka</h2>
+                            <!-- Filter i pretraga -->
+                            <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                                <select id="typeFilter" class="px-3 py-2 text-xs rounded-xl border border-[#e8dfd3] bg-[#fcf9f5] focus:outline-none focus:ring-2 focus:ring-[#b89582] text-[#4a4238]">
+                                    <option value="all">Svi tipovi biljaka</option>
+                                    <option value="lukovica">Lukovice / Reznice</option>
+                                    <option value="odrasla">Odrasle biljke</option>
+                                </select>
+                                <input type="text" id="searchInput" placeholder="Pretraži biljku..." class="px-3.5 py-2 text-xs rounded-xl border border-[#e8dfd3] bg-[#fcf9f5] focus:outline-none focus:ring-2 focus:ring-[#b89582] w-full md:w-52 text-[#4a4238]">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-[#f7f2eb] text-[11px] text-[#8c8275] font-semibold uppercase tracking-wider">
+                                    <th class="py-3 px-2">Biljka / Tip</th>
+                                    <th class="py-3 px-2">Nabavka</th>
+                                    <th class="py-3 px-2">Prihod / Prodaja</th>
+                                    <th class="py-3 px-2">Profit</th>
+                                    <th class="py-3 px-2 text-right">Akcija</th>
+                                </tr>
+                            </thead>
+                            <tbody id="plantsTableBody" class="text-sm divide-y divide-[#fcf9f5]">
+                                <!-- Dinamički podaci -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Expenses Table Section -->
+                <div class="bg-white p-6 rounded-3xl shadow-xs border border-[#f0eae1] space-y-4">
+                    <h2 class="font-semibold text-lg text-[#383027] border-b border-[#f7f2eb] pb-4">Pregled opštih troškova</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-[#f7f2eb] text-[11px] text-[#8c8275] font-semibold uppercase tracking-wider">
+                                    <th class="py-3 px-2">Naziv troška</th>
+                                    <th class="py-3 px-2">Datum</th>
+                                    <th class="py-3 px-2">Iznos</th>
+                                    <th class="py-3 px-2 text-right">Akcija</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expensesTableBody" class="text-sm divide-y divide-[#fcf9f5]">
+                                <!-- Dinamički troškovi -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
 
-            <div class="form-group">
-                <label for="amount">Iznos / Vrednost (RSD):</label>
-                <input type="number" id="amount" placeholder="0" step="any">
-            </div>
-
-            <button type="submit">Dodaj unos</button>
-        </form>
-    </div>
-
-    <div class="container">
-        <h2>Pregled po mesecima</h2>
-        
-        <div class="filter-section">
-            <select id="filterMonth">
-                <option value="all">Svi meseci</option>
-                <option value="01">Januar</option>
-                <option value="02">Februar</option>
-                <option value="03">Mart</option>
-                <option value="04">April</option>
-                <option value="05">Maj</option>
-                <option value="06">Jun</option>
-                <option value="07">Jul</option>
-                <option value="08">Avgust</option>
-                <option value="09">Septembar</option>
-                <option value="10">Oktobar</option>
-                <option value="11">Novembar</option>
-                <option value="12">Decembar</option>
-            </select>
-            <select id="filterYear">
-                <option value="all">Sve godine</option>
-            </select>
         </div>
 
-        <div class="stats" id="statsBox">
-            Ukupno troškova za izabrani period: 0 RSD
-        </div>
-
-        <div style="overflow-x: auto;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Datum</th>
-                        <th>Tip</th>
-                        <th>Naziv</th>
-                        <th>Iznos</th>
-                        <th>Akcija</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <!-- Unosi se pune ovde -->
-                </tbody>
-            </table>
-        </div>
-
-        <div class="backup-section">
-            <button type="button" onclick="exportData()">Izvezi podatke (Backup)</button>
-            <button type="button" onclick="document.getElementById('importFile').click()">Uvezi podatke</button>
-            <input type="file" id="importFile" accept=".json" onchange="importData(event)">
-        </div>
     </div>
 
     <script>
-        // Postavi današnji datum po difoltu u formu
-        document.getElementById('date').valueAsDate = new Date();
+        let plants = JSON.parse(localStorage.getItem('plant_business_plants')) || [];
+        let expenses = JSON.parse(localStorage.getItem('plant_business_expenses')) || [];
 
-        let entries = JSON.parse(localStorage.getItem('plant_entries')) || [];
+        const todayStr = new Date().toISOString().split('T')[0];
+        document.getElementById('plantDate').value = todayStr;
+        document.getElementById('expenseDate').value = todayStr;
+        document.getElementById('incomeDate').value = todayStr;
 
-        const form = document.getElementById('entryForm');
-        const tableBody = document.getElementById('tableBody');
-        const filterMonth = document.getElementById('filterMonth');
-        const filterYear = document.getElementById('filterYear');
-        const statsBox = document.getElementById('statsBox');
-
-        // Popuni godine u filteru automatski na osnovu unosa
-        function updateYearFilter() {
-            const years = [...new Set(entries.map(e => e.date.split('-')[0]))].sort().reverse();
-            const currentSelectedYear = filterYear.value;
-            
-            let options = '<option value="all">Sve godine</option>';
-            years.forEach(year => {
-                options += `<option value="${year}">${year}</option>`;
-            });
-            filterYear.innerHTML = options;
-            filterYear.value = years.includes(currentSelectedYear) ? currentSelectedYear : 'all';
-        }
-
-        // Postavi tekući mesec automatski pri prvom pokretanju da ti odmah otvori ovaj mesec
-        const currentMonthString = String(new Date().getMonth() + 1).padStart(2, '0');
-        const currentYearString = String(new Date().getFullYear());
+        const plantForm = document.getElementById('plantForm');
+        const expenseForm = document.getElementById('expenseForm');
+        const incomeForm = document.getElementById('incomeForm');
+        const plantsTableBody = document.getElementById('plantsTableBody');
+        const expensesTableBody = document.getElementById('expensesTableBody');
+        const selectPlant = document.getElementById('selectPlant');
         
-        filterMonth.value = currentMonthString;
+        const totalProfitEl = document.getElementById('totalProfit');
+        const totalExpensesEl = document.getElementById('totalExpenses');
+        const totalInvestedEl = document.getElementById('totalInvested');
+        const monthIncomeEl = document.getElementById('monthIncome');
+        const monthCostEl = document.getElementById('monthCost');
+        const monthExpOnlyEl = document.getElementById('monthExpOnly');
+        const monthPlantOnlyEl = document.getElementById('monthPlantOnly');
+        const currentMonthNameEl = document.getElementById('currentMonthName');
+        
+        const searchInput = document.getElementById('searchInput');
+        const typeFilter = document.getElementById('typeFilter');
+        const plantCostInput = document.getElementById('plantCost');
 
-        form.addEventListener('submit', function(e) {
+        const monthsNames = ["Januar", "Februar", "Mart", "April", "Maj", "Jun", "Jul", "Avgust", "Septembar", "Oktobar", "Novembar", "Decembar"];
+        const currentM = new Date().getMonth();
+        const currentY = new Date().getFullYear();
+        currentMonthNameEl.textContent = monthsNames[currentM] + ' ' + currentY;
+
+        plantForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            
-            const newEntry = {
-                id: Date.now(),
-                date: document.getElementById('date').value,
-                type: document.getElementById('type').value,
-                name: document.getElementById('name').value,
-                amount: parseFloat(document.getElementById('amount').value) || 0
-            };
+            const name = document.getElementById('plantName').value;
+            const type = document.getElementById('plantType').value;
+            const category = document.getElementById('plantCategory').value;
+            let cost = parseFloat(plantCostInput.value) || 0;
+            const date = document.getElementById('plantDate').value;
 
-            entries.push(newEntry);
+            plants.push({
+                id: Date.now(),
+                name,
+                type,
+                category,
+                cost,
+                date,
+                incomes: []
+            });
+
             saveAndRender();
-            form.reset();
-            document.getElementById('date').valueAsDate = new Date();
+            plantForm.reset();
+            document.getElementById('plantDate').value = todayStr;
         });
 
-        function deleteEntry(id) {
-            entries = entries.filter(e => e.id !== id);
+        expenseForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('expenseName').value;
+            const amount = parseFloat(document.getElementById('expenseAmount').value) || 0;
+            const date = document.getElementById('expenseDate').value;
+
+            expenses.push({
+                id: Date.now(),
+                name,
+                amount,
+                date
+            });
+
             saveAndRender();
-        }
+            expenseForm.reset();
+            document.getElementById('expenseDate').value = todayStr;
+        });
 
-        function saveAndRender() {
-            localStorage.setItem('plant_entries', JSON.stringify(entries));
-            updateYearFilter();
-            renderTable();
-        }
+        incomeForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const plantId = parseInt(selectPlant.value);
+            const incomeType = document.getElementById('incomeType').value;
+            const amount = parseFloat(document.getElementById('incomeAmount').value) || 0;
+            const date = document.getElementById('incomeDate').value;
+            const note = document.getElementById('incomeNote').value || (incomeType === 'full' ? 'Prodaja odrasle biljke' : 'Prodaja lukovice / reznice');
 
-        function renderTable() {
-            const selectedMonth = filterMonth.value;
-            const selectedYear = filterYear.value;
+            const plant = plants.find(p => p.id === plantId);
+            if (plant) {
+                plant.incomes.push({ id: Date.now(), amount, date, note });
+                saveAndRender();
+                incomeForm.reset();
+                document.getElementById('incomeDate').value = todayStr;
+            }
+        });
 
-            const filtered = entries.filter(e => {
-                const [year, month] = e.date.split('-');
-                const matchMonth = (selectedMonth === 'all' || month === selectedMonth);
-                const matchYear = (selectedYear === 'all' || year === selectedYear);
-                return matchMonth && matchYear;
-            });
-
-            // Sortiraj od najnovijeg ka najstarijem
-            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-            tableBody.innerHTML = '';
-            let totalCost = 0;
-
-            filtered.forEach(e => {
-                if (e.type === 'trosak') {
-                    totalCost += e.amount;
-                }
-
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${e.date}</td>
-                    <td>${e.type === 'trosak' ? 'Trošak' : 'Biljka'}</td>
-                    <td>${e.name}</td>
-                    <td>${e.amount ? e.amount.toLocaleString() + ' RSD' : '-'}</td>
-                    <td><button class="delete-btn" onclick="deleteEntry(${e.id})">Obriši</button></td>
-                `;
-                tableBody.appendChild(row);
-            });
-
-            statsBox.innerHTML = `Ukupno troškova za izabrani period: ${totalCost.toLocaleString()} RSD`;
-        }
-
-        filterMonth.addEventListener('change', renderTable);
-        filterYear.addEventListener('change', renderTable);
-
-        // Funkcija za izvoz (Backup)
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(entries));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", "evidencija_biljaka_backup.json");
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        }
-
-        // Funkcija za uvoz
-        function importData(event) {
-            const fileReader = new FileReader();
-            if (event.target.files[0]) {
-                fileReader.readAsText(event.target.files[0], "UTF-8");
-                fileReader.onload = function(e) {
-                    try {
-                        const imported = JSON.parse(e.target.result);
-                        if (Array.isArray(imported)) {
-                            entries = imported;
-                            saveAndRender();
-                            alert("Podaci su uspešno uvezeni!");
-                        } else {
-                            alert("Greška: Fajl nije u ispravnom formatu.");
-                        }
-                    } catch (error) {
-                        alert("Greška prilikom čitanja fajla.");
-                    }
-                };
+        window.deletePlant = function(id) {
+            if (confirm('Da li ste sigurni da želite da obrišete ovu biljku i sve njene prihode?')) {
+                plants = plants.filter(p => p.id !== id);
+                saveAndRender();
             }
         }
 
-        // Inicijalno pokretanje
-        updateYearFilter();
-        renderTable();
+        window.deleteIncome = function(plantId, incomeId) {
+            if (confirm('Da li ste sigurni da želite da obrišete ovu stavku prodaje?')) {
+                const plant = plants.find(p => p.id === plantId);
+                if (plant) {
+                    plant.incomes = plant.incomes.filter(inc => inc.id !== incomeId);
+                    saveAndRender();
+                }
+            }
+        }
+
+        window.deleteExpense = function(id) {
+            if (confirm('Da li ste sigurni da želite da obrišete ovaj trošak?')) {
+                expenses = expenses.filter(e => e.id !== id);
+                saveAndRender();
+            }
+        }
+
+        searchInput.addEventListener('input', render);
+        typeFilter.addEventListener('change', render);
+
+        function saveAndRender() {
+            localStorage.setItem('plant_business_plants', JSON.stringify(plants));
+            localStorage.setItem('plant_business_expenses', JSON.stringify(expenses));
+            render();
+        }
+
+        function render() {
+            plantsTableBody.innerHTML = '';
+            expensesTableBody.innerHTML = '';
+            selectPlant.innerHTML = '<option value="">-- Izaberi iz liste --</option>';
+
+            let totalInv = 0;
+            let totalExp = 0;
+            let totalIncAll = 0;
+            let monthInc = 0;
+            let monthExpTotal = 0; 
+            let monthPlantCostTotal = 0; 
+
+            expenses.forEach(exp => {
+                totalExp += exp.amount;
+                if (exp.date) {
+                    const parts = exp.date.split('-');
+                    if (parts.length === 3) {
+                        const y = parseInt(parts[0], 10);
+                        const m = parseInt(parts[1], 10) - 1;
+                        if (y === currentY && m === currentM) {
+                            monthExpTotal += exp.amount;
+                        }
+                    }
+                }
+
+                const row = document.createElement('tr');
+                row.className = "hover:bg-[#fcf9f5] transition";
+                row.innerHTML = `
+                    <td class="py-3 px-2 font-medium text-[#383027]">${exp.name}</td>
+                    <td class="py-3 px-2 text-[#8c8275] text-xs">${exp.date || '/'}</td>
+                    <td class="py-3 px-2 font-medium text-[#8c6d53]">${exp.amount.toFixed(2)} €</td>
+                    <td class="py-3 px-2 text-right">
+                        <button onclick="deleteExpense(${exp.id})" class="text-xs text-[#a89f91] hover:text-rose-700 transition cursor-pointer px-2 py-1 rounded hover:bg-[#f2e6e1]" title="Obriši trošak">Obriši</button>
+                    </td>
+                `;
+                expensesTableBody.appendChild(row);
+            });
+
+            if (expenses.length === 0) {
+                expensesTableBody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-[#a89f91] text-xs italic">Nema unetih opštih troškova.</td></tr>`;
+            }
+
+            const searchTerm = searchInput.value.toLowerCase();
+            const typeVal = typeFilter.value;
+
+            const filteredPlants = plants.filter(plant => {
+                const matchesSearch = plant.name.toLowerCase().includes(searchTerm);
+                const matchesType = typeVal === 'all' || plant.type === typeVal;
+                return matchesSearch && matchesType;
+            });
+
+            plants.forEach(plant => {
+                const option = document.createElement('option');
+                option.value = plant.id;
+                option.textContent = plant.name;
+                selectPlant.appendChild(option);
+
+                totalInv += plant.cost;
+
+                if (plant.date) {
+                    const parts = plant.date.split('-');
+                    if (parts.length === 3) {
+                        const y = parseInt(parts[0], 10);
+                        const m = parseInt(parts[1], 10) - 1;
+                        if (y === currentY && m === currentM) {
+                            monthPlantCostTotal += plant.cost;
+                        }
+                    }
+                }
+
+                const totalIncome = plant.incomes.reduce((sum, inc) => sum + inc.amount, 0);
+                totalIncAll += totalIncome;
+
+                plant.incomes.forEach(inc => {
+                    if (inc.date) {
+                        const parts = inc.date.split('-');
+                        if (parts.length === 3) {
+                            const y = parseInt(parts[0], 10);
+                            const m = parseInt(parts[1], 10) - 1;
+                            if (y === currentY && m === currentM) {
+                                monthInc += inc.amount;
+                            }
+                        }
+                    }
+                });
+            });
+
+            filteredPlants.forEach(plant => {
+                const totalIncome = plant.incomes.reduce((sum, inc) => sum + inc.amount, 0);
+                const profit = totalIncome - plant.cost;
+
+                let typeLabel = plant.type === 'odrasla' ? 'Odrasla biljka' : 'Lukovica / Reznica';
+
+                let categoryBadge = plant.category === 'retka' 
+                    ? `<span class="bg-[#f2e6e1] text-[#915a4b] border border-[#e3d1c9] px-2 py-0.5 text-[10px] rounded-md font-medium">Retka ✨</span>`
+                    : `<span class="bg-[#f0eae1] text-[#7a6f61] px-2 py-0.5 text-[10px] rounded-md">Standard</span>`;
+
+                let infoBadge = `<span class="text-xs text-[#a89f91]">Nabavka: ${plant.date || '/'}</span>`;
+
+                let incomesHtml = plant.incomes.length > 0 
+                    ? plant.incomes.map(inc => `<div class="flex items-center justify-between gap-2 text-xs text-[#8c8275] py-0.5"><span>+${inc.amount.toFixed(2)} € (${inc.date || ''}) - ${inc.note}</span><button onclick="deleteIncome(${plant.id}, ${inc.id})" class="text-[#b5aca1] hover:text-rose-700 font-bold px-1 transition cursor-pointer" title="Obriši ovu prodaju">×</button></div>`).join('')
+                    : `<span class="text-[#a89f91] italic text-xs">Nema zabeleženih prihoda</span>`;
+
+                const row = document.createElement('tr');
+                row.className = "hover:bg-[#fcf9f5] transition";
+                row.innerHTML = `
+                    <td class="py-3 px-2">
+                        <div class="flex items-center gap-2">
+                            <span class="font-medium text-[#383027]">${plant.name}</span>
+                            ${categoryBadge}
+                        </div>
+                        <span class="text-xs text-[#a89f91]">Tip: ${typeLabel} | </span>${infoBadge}
+                    </td>
+                    <td class="py-3 px-2 text-[#6e6355]">${plant.cost.toFixed(2)} €</td>
+                    <td class="py-3 px-2">
+                        <span class="font-medium text-[#527a60]">${totalIncome.toFixed(2)} €</span>
+                        <div class="mt-1 space-y-0.5">${incomesHtml}</div>
+                    </td>
+                    <td class="py-3 px-2 font-semibold ${profit >= 0 ? 'text-[#527a60]' : 'text-rose-700'}">${profit.toFixed(2)} €</td>
+                    <td class="py-3 px-2 text-right">
+                        <button onclick="deletePlant(${plant.id})" class="text-xs text-[#a89f91] hover:text-rose-700 transition cursor-pointer px-2 py-1 rounded hover:bg-[#f2e6e1]" title="Obriši biljku">Obriši</button>
+                    </td>
+                `;
+                plantsTableBody.appendChild(row);
+            });
+
+            if (filteredPlants.length === 0) {
+                plantsTableBody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-[#a89f91] text-xs italic">Nema unetih biljaka koje odgovaraju pretrazi.</td></tr>`;
+            }
+
+            const netProfit = totalIncAll - totalInv - totalExp;
+            const totalMonthCosts = monthExpTotal + monthPlantCostTotal;
+
+            totalInvestedEl.textContent = totalInv.toFixed(2) + ' €';
+            totalExpensesEl.textContent = totalExp.toFixed(2) + ' €';
+            totalProfitEl.textContent = netProfit.toFixed(2) + ' €';
+            totalProfitEl.className = `text-xl font-bold ${netProfit >= 0 ? 'text-[#527a60]' : 'text-rose-700'}`;
+
+            monthIncomeEl.textContent = monthInc.toFixed(2) + ' €';
+            monthCostEl.textContent = totalMonthCosts.toFixed(2) + ' €';
+            monthExpOnlyEl.textContent = monthExpTotal.toFixed(2) + ' €';
+            monthPlantOnlyEl.textContent = monthPlantCostTotal.toFixed(2) + ' €';
+        }
+
+        window.exportData = function() {
+            let csv = "Tip,Kategorija,Naziv,NabavnaCena,Datum,Detalji\n";
+            plants.forEach(p => {
+                let incStr = p.incomes.length > 0 ? p.incomes.map(i => `${i.amount}e (${i.date}) - ${i.note}`).join('; ') : 'Nije prodata';
+                csv += `${p.type},${p.category},"${p.name}",${p.cost},${p.date || ''},"Prodaja: ${incStr}"\n`;
+            });
+            expenses.forEach(e => {
+                csv += `Opsti Trosak,-,"${e.name}",${e.amount},${e.date || ''},\n`;
+            });
+
+            const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `jungle_dashboard_izvestaj_${todayStr}.csv`;
+            a.click();
+        }
+
+        render();
     </script>
 </body>
 </html>
