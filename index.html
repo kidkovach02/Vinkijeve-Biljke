@@ -41,14 +41,30 @@
             </div>
         </header>
 
-        <!-- Monthly Stats, Navigation & Export/Import -->
+        <!-- Eksplicitna traka za Backup i Uvoz -->
+        <div class="bg-white p-4 rounded-3xl shadow-xs border border-[#f0eae1] flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="text-xs text-[#7a6f61] font-medium flex items-center gap-2">
+                <span>💾 Upravljanje podacima baze:</span>
+            </div>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <button onclick="exportData()" class="flex-1 sm:flex-initial bg-[#665a4e] hover:bg-[#7a6d60] text-[#f7f2eb] text-xs font-medium px-4 py-2.5 rounded-xl transition cursor-pointer shadow-2xs text-center">
+                    📥 Izvezi podatke (Backup JSON)
+                </button>
+                <label class="flex-1 sm:flex-initial bg-[#b89582] hover:bg-[#a6826f] text-white text-xs font-medium px-4 py-2.5 rounded-xl transition cursor-pointer shadow-2xs text-center block">
+                    📤 Uvezi podatke
+                    <input type="file" id="importFile" accept=".json,.txt" class="hidden" onchange="importData(event)">
+                </label>
+            </div>
+        </div>
+
+        <!-- Monthly Stats & Navigation -->
         <div class="bg-[#52473d] text-[#f7f2eb] p-6 rounded-3xl shadow-sm space-y-5">
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 w-full justify-between lg:justify-start">
                     <button onclick="changeMonth(-1)" class="bg-[#665a4e] hover:bg-[#7a6d60] text-white w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer text-sm shrink-0" title="Prethodni mesec">‹</button>
                     <div>
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <h3 class="font-semibold text-base">📅 Statistika za mesec: <span id="currentMonthName" class="underline decoration-[#b8ab9d] underline-offset-4"></span></h3>
+                        <div class="flex items-center gap-2 flex-wrap justify-center lg:justify-start">
+                            <h3 class="font-semibold text-base text-center">📅 Statistika za mesec: <span id="currentMonthName" class="underline decoration-[#b8ab9d] underline-offset-4"></span></h3>
                             <!-- Kontrole za godinu -->
                             <div class="flex items-center bg-[#433931] rounded-xl px-1.5 py-0.5 text-xs">
                                 <button onclick="changeYear(-1)" class="text-[#b8ab9d] hover:text-white px-1 cursor-pointer" title="Prethodna godina">◀</button>
@@ -56,7 +72,7 @@
                                 <button onclick="changeYear(1)" class="text-[#b8ab9d] hover:text-white px-1 cursor-pointer" title="Naredna godina">▶</button>
                             </div>
                         </div>
-                        <p class="text-xs text-[#d4ccc2] mt-1">
+                        <p class="text-xs text-[#d4ccc2] mt-1 text-center lg:text-left">
                             Prihod ovog meseca: <span id="monthIncome" class="font-bold text-white">0.00 €</span> | 
                             Ukupni troškovi meseca: <span id="monthCost" class="font-bold text-white">0.00 €</span> 
                             <span class="text-[10px] text-[#b8ab9d] block sm:inline mt-0.5 sm:mt-0">(Opšti: <span id="monthExpOnly">0.00 €</span> + Nabavke: <span id="monthPlantOnly">0.00 €</span>)</span>
@@ -64,21 +80,10 @@
                     </div>
                     <button onclick="changeMonth(1)" class="bg-[#665a4e] hover:bg-[#7a6d60] text-white w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer text-sm shrink-0" title="Naredni mesec">›</button>
                 </div>
-                
-                <!-- Export i Import dugmad (Sada u zasebnom jasnom bloku) -->
-                <div class="flex items-center gap-2 w-full lg:w-auto pt-2 lg:pt-0 border-t lg:border-t-0 border-[#665a4e]/60">
-                    <button onclick="exportData()" class="flex-1 lg:flex-initial bg-[#665a4e] hover:bg-[#7a6d60] text-[#f7f2eb] text-xs font-medium px-4 py-3 rounded-2xl transition border border-[#7a6d60] cursor-pointer shadow-2xs text-center">
-                        📥 Izvezi podatke (JSON)
-                    </button>
-                    <label class="flex-1 lg:flex-initial bg-[#b89582] hover:bg-[#a6826f] text-white text-xs font-medium px-4 py-3 rounded-2xl transition cursor-pointer shadow-2xs text-center block">
-                        📤 Uvezi podatke
-                        <input type="file" id="importFile" accept=".json" class="hidden" onchange="importData(event)">
-                    </label>
-                </div>
             </div>
 
             <!-- Brzi izbor meseci -->
-            <div id="monthSelectorButtons" class="flex flex-wrap gap-1.5 pt-3 border-t border-[#665a4e]/60 text-xs">
+            <div id="monthSelectorButtons" class="flex flex-wrap gap-1.5 pt-3 border-t border-[#665a4e]/60 text-xs justify-center lg:justify-start">
                 <!-- Generisaće se dinamički -->
             </div>
         </div>
@@ -452,14 +457,20 @@
             }
         }
 
+        // Ispravljeno: Eksplicitno podešeno da koristi application/json i čisti JSON Blob
         window.exportData = function() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ plants, expenses }, null, 2));
+            const dataObj = { plants, expenses };
+            const jsonString = JSON.stringify(dataObj, null, 2);
+            const blob = new Blob([jsonString], { type: "application/json;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            
             const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `vinkijeve_biljke_backup_${currentY}-${currentM + 1}.json`);
+            downloadAnchor.href = url;
+            downloadAnchor.download = `vinkijeve_biljke_backup_${currentY}-${String(currentM + 1).padStart(2, '0')}.json`;
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
-            downloadAnchor.remove();
+            document.body.removeChild(downloadAnchor);
+            URL.revokeObjectURL(url);
         }
 
         window.importData = async function(event) {
@@ -477,25 +488,23 @@
 
                     if (content.plants && Array.isArray(content.plants)) {
                         for (const p of content.plants) {
-                            const { id, ...plantData } = p;
                             await addDoc(collection(db, "plants"), {
-                                name: plantData.name || 'Nepoznato',
-                                type: plantData.type || 'lukovica',
-                                category: plantData.category || 'standard',
-                                cost: plantData.cost || 0,
-                                date: plantData.date || todayStr,
-                                incomes: plantData.incomes || []
+                                name: p.name || 'Nepoznato',
+                                type: p.type || 'lukovica',
+                                category: p.category || 'standard',
+                                cost: p.cost || 0,
+                                date: p.date || todayStr,
+                                incomes: p.incomes || []
                             });
                         }
                     }
 
                     if (content.expenses && Array.isArray(content.expenses)) {
                         for (const exp of content.expenses) {
-                            const { id, ...expData } = exp;
                             await addDoc(collection(db, "expenses"), {
-                                name: expData.name || 'Trošak',
-                                amount: expData.amount || 0,
-                                date: expData.date || todayStr
+                                name: exp.name || 'Trošak',
+                                amount: exp.amount || 0,
+                                date: exp.date || todayStr
                             });
                         }
                     }
@@ -503,7 +512,7 @@
                     alert('Uspešno uvezeni podaci u Firebase bazu!');
                 } catch (err) {
                     console.error("Greška pri uvozu fajla:", err);
-                    alert('Došlo je do greške prilikom čitanja JSON fajla.');
+                    alert('Došlo je do greške prilikom čitanja fajla. Proverite da li je u pitanju ispravan JSON backup fajl.');
                 }
                 event.target.value = '';
             };
