@@ -41,19 +41,33 @@
             </div>
         </header>
 
-        <!-- Monthly Stats & Export -->
-        <div class="bg-[#52473d] text-[#f7f2eb] p-6 rounded-3xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
-            <div>
-                <h3 class="font-semibold text-base">📅 Statistika za tekući mesec (<span id="currentMonthName"></span>)</h3>
-                <p class="text-xs text-[#d4ccc2] mt-1">
-                    Prihod ovog meseca: <span id="monthIncome" class="font-bold text-white">0.00 €</span> | 
-                    Ukupni troškovi meseca: <span id="monthCost" class="font-bold text-white">0.00 €</span> 
-                    <span class="text-[10px] text-[#b8ab9d] block sm:inline mt-0.5 sm:mt-0">(Opšti: <span id="monthExpOnly">0.00 €</span> + Nabavke: <span id="monthPlantOnly">0.00 €</span>)</span>
-                </p>
+        <!-- Monthly Stats, Navigation & Export -->
+        <div class="bg-[#52473d] text-[#f7f2eb] p-6 rounded-3xl shadow-sm space-y-4">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <h3 class="font-semibold text-base">📅 Statistika za mesec: <span id="currentMonthName" class="underline decoration-[#b8ab9d] underline-offset-4"></span></h3>
+                        <!-- Kontrole za godinu -->
+                        <div class="flex items-center bg-[#433931] rounded-xl px-2 py-1 text-xs">
+                            <button onclick="changeYear(-1)" class="text-[#b8ab9d] hover:text-white px-1.5 cursor-pointer font-bold" title="Prethodna godina">◀</button>
+                            <span id="currentYearDisplay" class="font-bold text-white px-1">2026</span>
+                            <button onclick="changeYear(1)" class="text-[#b8ab9d] hover:text-white px-1.5 cursor-pointer font-bold" title="Naredna godina">▶</button>
+                        </div>
+                    </div>
+                    <p class="text-xs text-[#d4ccc2] mt-1.5">
+                        Prihod ovog meseca: <span id="monthIncome" class="font-bold text-white">0.00 €</span> | 
+                        Ukupni troškovi meseca: <span id="monthCost" class="font-bold text-white">0.00 €</span> 
+                        <span class="text-[10px] text-[#b8ab9d] block sm:inline mt-0.5 sm:mt-0">(Opšti: <span id="monthExpOnly">0.00 €</span> + Nabavke: <span id="monthPlantOnly">0.00 €</span>)</span>
+                    </p>
+                </div>
+                <button onclick="exportData()" class="bg-[#665a4e] hover:bg-[#7a6d60] text-[#f7f2eb] text-xs font-medium px-5 py-3 rounded-2xl transition border border-[#7a6d60] cursor-pointer shadow-2xs shrink-0">
+                    📥 Izvezi podatke (CSV/Excel)
+                </button>
             </div>
-            <button onclick="exportData()" class="bg-[#665a4e] hover:bg-[#7a6d60] text-[#f7f2eb] text-xs font-medium px-5 py-3 rounded-2xl transition border border-[#7a6d60] cursor-pointer shadow-2xs shrink-0">
-                📥 Izvezi podatke (CSV/Excel)
-            </button>
+            <!-- Brzi izbor meseci -->
+            <div id="monthSelectorButtons" class="flex flex-wrap gap-1.5 pt-2 border-t border-[#665a4e]/60 text-xs">
+                <!-- Generisaće se dinamički -->
+            </div>
         </div>
 
         <!-- Main Grid -->
@@ -195,7 +209,13 @@
 
                 <!-- Expenses Table Section -->
                 <div class="bg-white p-6 rounded-3xl shadow-xs border border-[#f0eae1] space-y-4">
-                    <h2 class="font-semibold text-lg text-[#383027] border-b border-[#f7f2eb] pb-4">Pregled opštih troškova</h2>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#f7f2eb] pb-4">
+                        <h2 class="font-semibold text-lg text-[#383027]">Pregled opštih troškova</h2>
+                        <div class="text-xs text-[#8c8275] bg-[#f7f2eb] px-3 py-1.5 rounded-xl">
+                            Prikaz za: <span id="expenseFilterLabel" class="font-bold text-[#4a4238]"></span> 
+                            <button onclick="resetExpenseFilter()" id="resetExpBtn" class="ml-2 text-[#b89582] hover:underline font-medium hidden">(Prikaži sve)</button>
+                        </div>
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
@@ -243,15 +263,60 @@
         const monthExpOnlyEl = document.getElementById('monthExpOnly');
         const monthPlantOnlyEl = document.getElementById('monthPlantOnly');
         const currentMonthNameEl = document.getElementById('currentMonthName');
+        const currentYearDisplay = document.getElementById('currentYearDisplay');
+        const expenseFilterLabel = document.getElementById('expenseFilterLabel');
+        const resetExpBtn = document.getElementById('resetExpBtn');
+        const monthSelectorButtons = document.getElementById('monthSelectorButtons');
         
         const searchInput = document.getElementById('searchInput');
         const typeFilter = document.getElementById('typeFilter');
         const plantCostInput = document.getElementById('plantCost');
 
         const monthsNames = ["Januar", "Februar", "Mart", "April", "Maj", "Jun", "Jul", "Avgust", "Septembar", "Oktobar", "Novembar", "Decembar"];
-        const currentM = new Date().getMonth();
-        const currentY = new Date().getFullYear();
-        currentMonthNameEl.textContent = monthsNames[currentM] + ' ' + currentY;
+        let currentM = new Date().getMonth();
+        let currentY = new Date().getFullYear();
+        let viewAllExpenses = false; // Da li prikazujemo sve troškove ili samo za odabrani mesec
+
+        function renderMonthSelector() {
+            monthSelectorButtons.innerHTML = '';
+            
+            // Dugme za "Sve mesece"
+            const allBtn = document.createElement('button');
+            allBtn.type = 'button';
+            allBtn.className = `px-3 py-1.5 rounded-xl font-medium transition cursor-pointer ${viewAllExpenses ? 'bg-white text-[#4a4238] shadow-2xs' : 'bg-[#665a4e] text-[#d4ccc2] hover:bg-[#7a6d60] hover:text-white'}`;
+            allBtn.textContent = '📋 Prikaži sve troškove';
+            allBtn.onclick = () => {
+                viewAllExpenses = true;
+                render();
+            };
+            monthSelectorButtons.appendChild(allBtn);
+
+            // Dugmići za mjesece
+            monthsNames.forEach((mName, idx) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                const isSelected = !viewAllExpenses && currentM === idx;
+                btn.className = `px-3 py-1.5 rounded-xl font-medium transition cursor-pointer ${isSelected ? 'bg-white text-[#4a4238] shadow-2xs font-bold' : 'bg-[#665a4e] text-[#d4ccc2] hover:bg-[#7a6d60] hover:text-white'}`;
+                btn.textContent = mName;
+                btn.onclick = () => {
+                    currentM = idx;
+                    viewAllExpenses = false;
+                    render();
+                };
+                monthSelectorButtons.appendChild(btn);
+            });
+        }
+
+        window.changeYear = function(direction) {
+            currentY += direction;
+            viewAllExpenses = false;
+            render();
+        }
+
+        window.resetExpenseFilter = function() {
+            viewAllExpenses = true;
+            render();
+        }
 
         plantForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -345,6 +410,18 @@
         }
 
         function render() {
+            currentMonthNameEl.textContent = monthsNames[currentM];
+            currentYearDisplay.textContent = currentY;
+            renderMonthSelector();
+
+            if (viewAllExpenses) {
+                expenseFilterLabel.textContent = "Svi meseci (ukupno)";
+                resetExpBtn.classList.remove('hidden');
+            } else {
+                expenseFilterLabel.textContent = monthsNames[currentM] + ' ' + currentY;
+                resetExpBtn.classList.add('hidden');
+            }
+
             plantsTableBody.innerHTML = '';
             expensesTableBody.innerHTML = '';
             selectPlant.innerHTML = '<option value="">-- Izaberi iz liste --</option>';
@@ -358,6 +435,7 @@
 
             expenses.forEach(exp => {
                 totalExp += exp.amount;
+                let isMatchMonth = false;
                 if (exp.date) {
                     const parts = exp.date.split('-');
                     if (parts.length === 3) {
@@ -365,25 +443,28 @@
                         const m = parseInt(parts[1], 10) - 1;
                         if (y === currentY && m === currentM) {
                             monthExpTotal += exp.amount;
+                            isMatchMonth = true;
                         }
                     }
                 }
 
-                const row = document.createElement('tr');
-                row.className = "hover:bg-[#fcf9f5] transition";
-                row.innerHTML = `
-                    <td class="py-3 px-2 font-medium text-[#383027]">${exp.name}</td>
-                    <td class="py-3 px-2 text-[#8c8275] text-xs">${exp.date || '/'}</td>
-                    <td class="py-3 px-2 font-medium text-[#8c6d53]">${exp.amount.toFixed(2)} €</td>
-                    <td class="py-3 px-2 text-right">
-                        <button onclick="deleteExpense(${exp.id})" class="text-xs text-[#a89f91] hover:text-rose-700 transition cursor-pointer px-2 py-1 rounded hover:bg-[#f2e6e1]" title="Obriši trošak">Obriši</button>
-                    </td>
-                `;
-                expensesTableBody.appendChild(row);
+                if (viewAllExpenses || isMatchMonth) {
+                    const row = document.createElement('tr');
+                    row.className = "hover:bg-[#fcf9f5] transition";
+                    row.innerHTML = `
+                        <td class="py-3 px-2 font-medium text-[#383027]">${exp.name}</td>
+                        <td class="py-3 px-2 text-[#8c8275] text-xs">${exp.date || '/'}</td>
+                        <td class="py-3 px-2 font-medium text-[#8c6d53]">${exp.amount.toFixed(2)} €</td>
+                        <td class="py-3 px-2 text-right">
+                            <button onclick="deleteExpense(${exp.id})" class="text-xs text-[#a89f91] hover:text-rose-700 transition cursor-pointer px-2 py-1 rounded hover:bg-[#f2e6e1]" title="Obriši trošak">Obriši</button>
+                        </td>
+                    `;
+                    expensesTableBody.appendChild(row);
+                }
             });
 
-            if (expenses.length === 0) {
-                expensesTableBody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-[#a89f91] text-xs italic">Nema unetih opštih troškova.</td></tr>`;
+            if (expensesTableBody.children.length === 0) {
+                expensesTableBody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-[#a89f91] text-xs italic">Nema unetih opštih troškova za izabrani period.</td></tr>`;
             }
 
             const searchTerm = searchInput.value.toLowerCase();
