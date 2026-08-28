@@ -44,21 +44,25 @@
         <!-- Monthly Stats, Navigation & Export -->
         <div class="bg-[#52473d] text-[#f7f2eb] p-6 rounded-3xl shadow-sm space-y-4">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <div class="flex flex-wrap items-center gap-3">
-                        <h3 class="font-semibold text-base">📅 Statistika za mesec: <span id="currentMonthName" class="underline decoration-[#b8ab9d] underline-offset-4"></span></h3>
-                        <!-- Kontrole za godinu -->
-                        <div class="flex items-center bg-[#433931] rounded-xl px-2 py-1 text-xs">
-                            <button onclick="changeYear(-1)" class="text-[#b8ab9d] hover:text-white px-1.5 cursor-pointer font-bold" title="Prethodna godina">◀</button>
-                            <span id="currentYearDisplay" class="font-bold text-white px-1">2026</span>
-                            <button onclick="changeYear(1)" class="text-[#b8ab9d] hover:text-white px-1.5 cursor-pointer font-bold" title="Naredna godina">▶</button>
+                <div class="flex items-center gap-3">
+                    <button onclick="changeMonth(-1)" class="bg-[#665a4e] hover:bg-[#7a6d60] text-white w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer text-sm" title="Prethodni mesec">‹</button>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-semibold text-base">📅 Statistika za mesec: <span id="currentMonthName" class="underline decoration-[#b8ab9d] underline-offset-4"></span></h3>
+                            <!-- Kontrole za godinu -->
+                            <div class="flex items-center bg-[#433931] rounded-xl px-1.5 py-0.5 text-xs">
+                                <button onclick="changeYear(-1)" class="text-[#b8ab9d] hover:text-white px-1 cursor-pointer" title="Prethodna godina">◀</button>
+                                <span id="currentYearDisplay" class="font-bold text-white px-1">2026</span>
+                                <button onclick="changeYear(1)" class="text-[#b8ab9d] hover:text-white px-1 cursor-pointer" title="Naredna godina">▶</button>
+                            </div>
                         </div>
+                        <p class="text-xs text-[#d4ccc2] mt-1">
+                            Prihod ovog meseca: <span id="monthIncome" class="font-bold text-white">0.00 €</span> | 
+                            Ukupni troškovi meseca: <span id="monthCost" class="font-bold text-white">0.00 €</span> 
+                            <span class="text-[10px] text-[#b8ab9d] block sm:inline mt-0.5 sm:mt-0">(Opšti: <span id="monthExpOnly">0.00 €</span> + Nabavke: <span id="monthPlantOnly">0.00 €</span>)</span>
+                        </p>
                     </div>
-                    <p class="text-xs text-[#d4ccc2] mt-1.5">
-                        Prihod ovog meseca: <span id="monthIncome" class="font-bold text-white">0.00 €</span> | 
-                        Ukupni troškovi meseca: <span id="monthCost" class="font-bold text-white">0.00 €</span> 
-                        <span class="text-[10px] text-[#b8ab9d] block sm:inline mt-0.5 sm:mt-0">(Opšti: <span id="monthExpOnly">0.00 €</span> + Nabavke: <span id="monthPlantOnly">0.00 €</span>)</span>
-                    </p>
+                    <button onclick="changeMonth(1)" class="bg-[#665a4e] hover:bg-[#7a6d60] text-white w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer text-sm" title="Naredni mesec">›</button>
                 </div>
                 <button onclick="exportData()" class="bg-[#665a4e] hover:bg-[#7a6d60] text-[#f7f2eb] text-xs font-medium px-5 py-3 rounded-2xl transition border border-[#7a6d60] cursor-pointer shadow-2xs shrink-0">
                     📥 Izvezi podatke (CSV/Excel)
@@ -275,12 +279,11 @@
         const monthsNames = ["Januar", "Februar", "Mart", "April", "Maj", "Jun", "Jul", "Avgust", "Septembar", "Oktobar", "Novembar", "Decembar"];
         let currentM = new Date().getMonth();
         let currentY = new Date().getFullYear();
-        let viewAllExpenses = false; // Da li prikazujemo sve troškove ili samo za odabrani mesec
+        let viewAllExpenses = false;
 
         function renderMonthSelector() {
             monthSelectorButtons.innerHTML = '';
             
-            // Dugme za "Sve mesece"
             const allBtn = document.createElement('button');
             allBtn.type = 'button';
             allBtn.className = `px-3 py-1.5 rounded-xl font-medium transition cursor-pointer ${viewAllExpenses ? 'bg-white text-[#4a4238] shadow-2xs' : 'bg-[#665a4e] text-[#d4ccc2] hover:bg-[#7a6d60] hover:text-white'}`;
@@ -291,7 +294,6 @@
             };
             monthSelectorButtons.appendChild(allBtn);
 
-            // Dugmići za mjesece
             monthsNames.forEach((mName, idx) => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
@@ -305,6 +307,19 @@
                 };
                 monthSelectorButtons.appendChild(btn);
             });
+        }
+
+        window.changeMonth = function(direction) {
+            currentM += direction;
+            if (currentM > 11) {
+                currentM = 0;
+                currentY++;
+            } else if (currentM < 0) {
+                currentM = 11;
+                currentY--;
+            }
+            viewAllExpenses = false;
+            render();
         }
 
         window.changeYear = function(direction) {
@@ -398,6 +413,16 @@
                 expenses = expenses.filter(e => e.id !== id);
                 saveAndRender();
             }
+        }
+
+        window.exportData = function() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ plants, expenses }, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `jungle_dashboard_backup_${currentY}-${currentM + 1}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
         }
 
         searchInput.addEventListener('input', render);
@@ -522,8 +547,6 @@
                     ? `<span class="bg-[#f2e6e1] text-[#915a4b] border border-[#e3d1c9] px-2 py-0.5 text-[10px] rounded-md font-medium">Retka ✨</span>`
                     : `<span class="bg-[#f0eae1] text-[#7a6f61] px-2 py-0.5 text-[10px] rounded-md">Standard</span>`;
 
-                let infoBadge = `<span class="text-xs text-[#a89f91]">Nabavka: ${plant.date || '/'}</span>`;
-
                 let incomesHtml = plant.incomes.length > 0 
                     ? plant.incomes.map(inc => `<div class="flex items-center justify-between gap-2 text-xs text-[#8c8275] py-0.5"><span>+${inc.amount.toFixed(2)} € (${inc.date || ''}) - ${inc.note}</span><button onclick="deleteIncome(${plant.id}, ${inc.id})" class="text-[#b5aca1] hover:text-rose-700 font-bold px-1 transition cursor-pointer" title="Obriši ovu prodaju">×</button></div>`).join('')
                     : `<span class="text-[#a89f91] italic text-xs">Nema zabeleženih prihoda</span>`;
@@ -532,18 +555,28 @@
                 row.className = "hover:bg-[#fcf9f5] transition";
                 row.innerHTML = `
                     <td class="py-3 px-2">
-                        <div class="flex items-center gap-2">
-                            <span class="font-medium text-[#383027]">${plant.name}</span>
-                            ${categoryBadge}
+                        <div class="flex flex-col gap-1">
+                            <div class="flex items-center gap-2">
+                                <span class="font-medium text-[#383027]">${plant.name}</span>
+                                ${categoryBadge}
+                            </div>
+                            <span class="text-[11px] text-[#a89f91]">${typeLabel}</span>
                         </div>
-                        <span class="text-xs text-[#a89f91]">Tip: ${typeLabel} | </span>${infoBadge}
                     </td>
-                    <td class="py-3 px-2 text-[#6e6355]">${plant.cost.toFixed(2)} €</td>
                     <td class="py-3 px-2">
-                        <span class="font-medium text-[#527a60]">${totalIncome.toFixed(2)} €</span>
-                        <div class="mt-1 space-y-0.5">${incomesHtml}</div>
+                        <div class="text-xs text-[#6e6355]">
+                            <span class="font-medium">${plant.cost.toFixed(2)} €</span>
+                            <div class="text-[10px] text-[#a89f91]">${plant.date || ''}</div>
+                        </div>
                     </td>
-                    <td class="py-3 px-2 font-semibold ${profit >= 0 ? 'text-[#527a60]' : 'text-rose-700'}">${profit.toFixed(2)} €</td>
+                    <td class="py-3 px-2">
+                        <div class="space-y-1">
+                            ${incomesHtml}
+                        </div>
+                    </td>
+                    <td class="py-3 px-2 font-medium ${profit >= 0 ? 'text-emerald-700' : 'text-rose-700'}">
+                        ${profit.toFixed(2)} €
+                    </td>
                     <td class="py-3 px-2 text-right">
                         <button onclick="deletePlant(${plant.id})" class="text-xs text-[#a89f91] hover:text-rose-700 transition cursor-pointer px-2 py-1 rounded hover:bg-[#f2e6e1]" title="Obriši biljku">Obriši</button>
                     </td>
@@ -552,39 +585,21 @@
             });
 
             if (filteredPlants.length === 0) {
-                plantsTableBody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-[#a89f91] text-xs italic">Nema unetih biljaka koje odgovaraju pretrazi.</td></tr>`;
+                plantsTableBody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-[#a89f91] text-xs italic">Nema unetih biljaka ili rezultata pretrage.</td></tr>`;
             }
 
+            // Globalni izveštaj
             const netProfit = totalIncAll - totalInv - totalExp;
-            const totalMonthCosts = monthExpTotal + monthPlantCostTotal;
-
-            totalInvestedEl.textContent = totalInv.toFixed(2) + ' €';
-            totalExpensesEl.textContent = totalExp.toFixed(2) + ' €';
             totalProfitEl.textContent = netProfit.toFixed(2) + ' €';
-            totalProfitEl.className = `text-xl font-bold ${netProfit >= 0 ? 'text-[#527a60]' : 'text-rose-700'}`;
+            totalExpensesEl.textContent = totalExp.toFixed(2) + ' €';
+            totalInvestedEl.textContent = totalInv.toFixed(2) + ' €';
 
+            // Mesečni izveštaj
             monthIncomeEl.textContent = monthInc.toFixed(2) + ' €';
-            monthCostEl.textContent = totalMonthCosts.toFixed(2) + ' €';
+            const totalMonthCost = monthExpTotal + monthPlantCostTotal;
+            monthCostEl.textContent = totalMonthCost.toFixed(2) + ' €';
             monthExpOnlyEl.textContent = monthExpTotal.toFixed(2) + ' €';
             monthPlantOnlyEl.textContent = monthPlantCostTotal.toFixed(2) + ' €';
-        }
-
-        window.exportData = function() {
-            let csv = "Tip,Kategorija,Naziv,NabavnaCena,Datum,Detalji\n";
-            plants.forEach(p => {
-                let incStr = p.incomes.length > 0 ? p.incomes.map(i => `${i.amount}e (${i.date}) - ${i.note}`).join('; ') : 'Nije prodata';
-                csv += `${p.type},${p.category},"${p.name}",${p.cost},${p.date || ''},"Prodaja: ${incStr}"\n`;
-            });
-            expenses.forEach(e => {
-                csv += `Opsti Trosak,-,"${e.name}",${e.amount},${e.date || ''},\n`;
-            });
-
-            const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `jungle_dashboard_izvestaj_${todayStr}.csv`;
-            a.click();
         }
 
         render();
