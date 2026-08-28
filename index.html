@@ -18,11 +18,13 @@
 
     <div class="max-w-6xl mx-auto space-y-8">
         
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-xs border border-[#f0eae1]">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/85 backdrop-blur-md p-6 rounded-3xl shadow-xs border border-[#f0eae1]">
           <div>
               <h1 class="text-2xl font-bold text-[#383027] tracking-tight">🌿 Jungle Dashboard</h1>
               <p class="text-xs text-[#8c8275] mt-0.5">Praćenje nabavki, opštih troškova i zarade (Firebase sinhronizacija)</p>
           </div>
+            <!-- Global Stats -->
             <div class="flex flex-wrap gap-3 w-full md:w-auto">
                 <div class="bg-[#f7f2eb] px-4 py-3 rounded-2xl border border-[#ede5d8] flex-1 md:flex-initial">
                     <p class="text-[11px] text-[#7a6f61] font-medium uppercase tracking-wider">Neto Profit</p>
@@ -39,13 +41,15 @@
             </div>
         </header>
 
-        <div class="bg-[#52473d] text-[#f7f2eb] p-6 rounded-3xl shadow-sm space-y-4">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <!-- Monthly Stats, Navigation & Export/Import -->
+        <div class="bg-[#52473d] text-[#f7f2eb] p-6 rounded-3xl shadow-sm space-y-5">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div class="flex items-center gap-3">
-                    <button onclick="changeMonth(-1)" class="bg-[#665a4e] hover:bg-[#7a6d60] text-white w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer text-sm" title="Prethodni mesec">‹</button>
+                    <button onclick="changeMonth(-1)" class="bg-[#665a4e] hover:bg-[#7a6d60] text-white w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer text-sm shrink-0" title="Prethodni mesec">‹</button>
                     <div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
                             <h3 class="font-semibold text-base">📅 Statistika za mesec: <span id="currentMonthName" class="underline decoration-[#b8ab9d] underline-offset-4"></span></h3>
+                            <!-- Kontrole za godinu -->
                             <div class="flex items-center bg-[#433931] rounded-xl px-1.5 py-0.5 text-xs">
                                 <button onclick="changeYear(-1)" class="text-[#b8ab9d] hover:text-white px-1 cursor-pointer" title="Prethodna godina">◀</button>
                                 <span id="currentYearDisplay" class="font-bold text-white px-1">2026</span>
@@ -58,27 +62,34 @@
                             <span class="text-[10px] text-[#b8ab9d] block sm:inline mt-0.5 sm:mt-0">(Opšti: <span id="monthExpOnly">0.00 €</span> + Nabavke: <span id="monthPlantOnly">0.00 €</span>)</span>
                         </p>
                     </div>
-                    <button onclick="changeMonth(1)" class="bg-[#665a4e] hover:bg-[#7a6d60] text-white w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer text-sm" title="Naredni mesec">›</button>
+                    <button onclick="changeMonth(1)" class="bg-[#665a4e] hover:bg-[#7a6d60] text-white w-9 h-9 rounded-xl flex items-center justify-center transition cursor-pointer text-sm shrink-0" title="Naredni mesec">›</button>
                 </div>
                 
-                <div class="flex flex-wrap gap-2 shrink-0">
-                    <button onclick="exportData()" class="bg-[#665a4e] hover:bg-[#7a6d60] text-[#f7f2eb] text-xs font-medium px-4 py-3 rounded-2xl transition border border-[#7a6d60] cursor-pointer shadow-2xs">
-                        📥 Izvezi (Backup)
+                <!-- Export i Import dugmad (Sada u zasebnom jasnom bloku) -->
+                <div class="flex items-center gap-2 w-full lg:w-auto pt-2 lg:pt-0 border-t lg:border-t-0 border-[#665a4e]/60">
+                    <button onclick="exportData()" class="flex-1 lg:flex-initial bg-[#665a4e] hover:bg-[#7a6d60] text-[#f7f2eb] text-xs font-medium px-4 py-3 rounded-2xl transition border border-[#7a6d60] cursor-pointer shadow-2xs text-center">
+                        📥 Izvezi podatke (JSON)
                     </button>
-                    <label class="bg-[#b89582] hover:bg-[#a6826f] text-white text-xs font-medium px-4 py-3 rounded-2xl transition cursor-pointer shadow-2xs flex items-center">
+                    <label class="flex-1 lg:flex-initial bg-[#b89582] hover:bg-[#a6826f] text-white text-xs font-medium px-4 py-3 rounded-2xl transition cursor-pointer shadow-2xs text-center block">
                         📤 Uvezi podatke
                         <input type="file" id="importFile" accept=".json" class="hidden" onchange="importData(event)">
                     </label>
                 </div>
             </div>
-            <div id="monthSelectorButtons" class="flex flex-wrap gap-1.5 pt-2 border-t border-[#665a4e]/60 text-xs">
-                </div>
+
+            <!-- Brzi izbor meseci -->
+            <div id="monthSelectorButtons" class="flex flex-wrap gap-1.5 pt-3 border-t border-[#665a4e]/60 text-xs">
+                <!-- Generisaće se dinamički -->
+            </div>
         </div>
 
+        <!-- Main Grid -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             
+            <!-- Left Column: Forms -->
             <div class="space-y-6 md:col-span-1">
                 
+                <!-- Add Plant Form -->
                 <div class="bg-white p-6 rounded-3xl shadow-xs border border-[#f0eae1] space-y-4">
                     <h2 class="font-semibold text-sm uppercase tracking-wider text-[#7a6f61] border-b border-[#f7f2eb] pb-3">1. Nova biljka / Nabavka</h2>
                     <form id="plantForm" class="space-y-3.5">
@@ -116,6 +127,7 @@
                     </form>
                 </div>
 
+                <!-- Add General Expense Form -->
                 <div class="bg-white p-6 rounded-3xl shadow-xs border border-[#f0eae1] space-y-4">
                     <h2 class="font-semibold text-sm uppercase tracking-wider text-[#7a6f61] border-b border-[#f7f2eb] pb-3">2. Opšti trošak (zemlja, saksije...)</h2>
                     <form id="expenseForm" class="space-y-3.5">
@@ -135,6 +147,7 @@
                     </form>
                 </div>
 
+                <!-- Add Income Form -->
                 <div class="bg-white p-6 rounded-3xl shadow-xs border border-[#f0eae1] space-y-4">
                     <h2 class="font-semibold text-sm uppercase tracking-wider text-[#7a6f61] border-b border-[#f7f2eb] pb-3">3. Zabeleži prodaju</h2>
                     <form id="incomeForm" class="space-y-3.5">
@@ -169,12 +182,15 @@
 
             </div>
 
+            <!-- Right Column: Tables & Filters -->
             <div class="md:col-span-2 space-y-6">
                 
+                <!-- Plants Table Section -->
                 <div class="bg-white p-6 rounded-3xl shadow-xs border border-[#f0eae1] space-y-4">
                     <div class="flex flex-col gap-3 border-b border-[#f7f2eb] pb-4">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                             <h2 class="font-semibold text-lg text-[#383027]">Evidencija biljaka</h2>
+                            <!-- Filter i pretraga -->
                             <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                                 <select id="typeFilter" class="px-3 py-2 text-xs rounded-xl border border-[#e8dfd3] bg-[#fcf9f5] focus:outline-none focus:ring-2 focus:ring-[#b89582] text-[#4a4238]">
                                     <option value="all">Svi tipovi biljaka</option>
@@ -198,11 +214,13 @@
                                 </tr>
                             </thead>
                             <tbody id="plantsTableBody" class="text-sm divide-y divide-[#fcf9f5]">
-                                </tbody>
+                                <!-- Dinamički podaci -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
 
+                <!-- Expenses Table Section -->
                 <div class="bg-white p-6 rounded-3xl shadow-xs border border-[#f0eae1] space-y-4">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#f7f2eb] pb-4">
                         <h2 class="font-semibold text-lg text-[#383027]">Pregled opštih troškova</h2>
@@ -222,7 +240,8 @@
                                 </tr>
                             </thead>
                             <tbody id="expensesTableBody" class="text-sm divide-y divide-[#fcf9f5]">
-                                </tbody>
+                                <!-- Dinamički troškovi -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -233,6 +252,7 @@
 
     </div>
 
+    <!-- Firebase SDK skripte (Modularna verzija) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
